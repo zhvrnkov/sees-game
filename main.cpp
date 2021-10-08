@@ -44,6 +44,7 @@ int main() {
   using std::chrono::milliseconds;
 
   auto t1 = high_resolution_clock::now();
+  #pragma omp parallel for
   for (int i = 0; i < us; i++) {
     for (int j = 0; j < us; j++) {
       if (i == j) {
