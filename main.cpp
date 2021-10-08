@@ -11,6 +11,7 @@ typedef struct {
   float pos_y;
   float dir_x;
   float dir_y;
+  int counter;
 } Unit;
 
 Unit units[] = {
@@ -19,11 +20,11 @@ Unit units[] = {
   { .pos_x = -5, .pos_y = -1, .dir_x = 0.7071067, .dir_y = 0.7071067 },
 };
 
-bool sees(Unit src, Unit dest, float distance, float c) {
-  float dp_x = dest.pos_x - src.pos_x;
-  float dp_y = dest.pos_y - src.pos_y;
+bool sees(const Unit *src, const Unit *dest, const float distance, const float c) {
+  float dp_x = dest->pos_x - src->pos_x;
+  float dp_y = dest->pos_y - src->pos_y;
   float dpl = sqrt(pow(dp_x, 2.0) + pow(dp_y, 2.0));
-  return dpl <= distance && (src.dir_x * dp_x + src.dir_y * dp_y) >= c;
+  return dpl <= distance && (src->dir_x * dp_x + src->dir_y * dp_y) >= c;
 }
 
 
@@ -48,12 +49,17 @@ int main() {
       if (i == j) {
         continue;
       }
-      if (sees(uns[i], uns[j], d, a)) {
-        // cout << i << " sees " << j << endl;
+      if (sees(&uns[i], &uns[j], d, a)) {
+        uns[i].counter += 1;
       }
     }
   }
   auto t2 = high_resolution_clock::now();
   duration<double, std::milli> ms_double = t2 - t1;
-  std::cout << ms_double.count() << "ms";
+  std::cout << ms_double.count() << "ms" << endl;
+  int counter = 0;
+  for (int i = 0; i < us; i++) {
+    counter += uns[i].counter;
+  }
+  std::cout << counter << endl;
 }
