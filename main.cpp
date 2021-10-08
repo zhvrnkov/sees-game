@@ -20,27 +20,10 @@ Unit units[] = {
   { .pos_x = -5, .pos_y = -1, .dir_x = 0.7071067, .dir_y = 0.7071067 },
 };
 
-float Q_rsqrt( float number )
-{
-	long i;
-	float x2, y;
-	const float threehalfs = 1.5F;
-
-	x2 = number * 0.5F;
-	y  = number;
-	i  = * ( long * ) &y;                       // evil floating point bit level hacking
-	i  = 0x5f3759df - ( i >> 1 );               // what the fuck? 
-	y  = * ( float * ) &i;
-	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
-//	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
-
-	return y;
-}
-
 bool sees(const Unit *src, const Unit *dest, const float distance, const float c) {
   float dp_x = dest->pos_x - src->pos_x;
   float dp_y = dest->pos_y - src->pos_y;
-  float dpl = 1/Q_rsqrt(dp_x * dp_x + dp_y * dp_y);
+  float dpl = sqrt(dp_x * dp_x + dp_y * dp_y);
   return dpl <= distance && (src->dir_x * dp_x + src->dir_y * dp_y) >= c;
 }
 
