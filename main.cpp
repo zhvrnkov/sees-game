@@ -24,7 +24,7 @@ bool sees(const Unit *src, const Unit *dest, const float distance, const float c
   float dp_x = dest->pos_x - src->pos_x;
   float dp_y = dest->pos_y - src->pos_y;
   float dpl = sqrt(dp_x * dp_x + dp_y * dp_y);
-  return dpl <= distance && (src->dir_x * dp_x + src->dir_y * dp_y) >= c;
+  return dpl <= distance && (src->dir_x * (dp_x / dpl) + src->dir_y * (dp_y / dpl)) >= c;
 }
 
 
