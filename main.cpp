@@ -7,20 +7,23 @@ using namespace glm;
 using namespace std;
 
 typedef struct {
-  vec2 position;
-  vec2 direction;
+  float pos_x;
+  float pos_y;
+  float dir_x;
+  float dir_y;
 } Unit;
 
 Unit units[] = {
-  { .position = vec2(1,1), .direction = vec2(0,1) },
-  { .position = vec2(1,2), .direction = vec2(1,0) },
-  { .position = vec2(-5,-1), .direction = vec2(0.7071067, 0.7071067) },
+  { .pos_x = 1, .pos_y = 1, .dir_x = 0, .dir_y = 1 },
+  { .pos_x = 1, .pos_y = 2, .dir_x = 1, .dir_y = 0 },
+  { .pos_x = -5, .pos_y = -1, .dir_x = 0.7071067, .dir_y = 0.7071067 },
 };
 
 bool sees(Unit src, Unit dest, float distance, float c) {
-  vec2 dp = dest.position - src.position;
-  float dpl = length(dp);
-  return dpl <= distance && dot(src.direction, dp / dpl) >= c;
+  float dp_x = dest.pos_x - src.pos_x;
+  float dp_y = dest.pos_y - src.pos_y;
+  float dpl = sqrt(pow(dp_x, 2.0) + pow(dp_y, 2.0));
+  return dpl <= distance && (src.dir_x * dp_x + src.dir_y * dp_y) >= c;
 }
 
 
