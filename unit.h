@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 using namespace glm;
+using namespace std;
 
 typedef struct {
   vec2 pos;
@@ -11,5 +12,9 @@ typedef struct {
   int counter;
 } Unit;
 
+void print_unit(Unit unit) {
+  cout << unit.pos.x << " " << unit.pos.y << endl;
+  cout << unit.dir.x << " " << unit.dir.y << endl << endl;
+}
 
 #endif

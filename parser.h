@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void parse_units(Unit *units, string path) {
+void parse_units(Unit *units, float distance, string path) {
   ifstream file;
   file.open(path, ios::in);
   string line;
@@ -23,7 +23,7 @@ void parse_units(Unit *units, string path) {
     }
     getline(file, line); // skip counter value
     units[units_index].pos = vec2(floats[0], floats[1]);
-    units[units_index].dir = vec2(floats[2], floats[3]);
+    units[units_index].dir = vec2(floats[2], floats[3]) * distance;
     units[units_index].counter = 0;
     units_index += 1;
   }

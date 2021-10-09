@@ -5,46 +5,36 @@
 #include "unit.h"
 #include "parser.h"
 
+#define UNITS_COUNT 10000
+#define VISIBLE_ANGLE 135.0f
+#define VISIBLE_DISTANCE 1.0f
+
+float VISIBLE_COEF = cos(VISIBLE_ANGLE / 2 * (M_PI / 180)) * VISIBLE_DISTANCE;
+float VISIBLE_DISTANCE_SQUARE = VISIBLE_DISTANCE * VISIBLE_DISTANCE;
+
 using namespace glm;
 using namespace std;
-float d = 20.0f;
-
-Unit units[] = {
-  { .pos = vec2(1, 1), .dir = vec2(0 * d, 1 * d) },
-  { .pos = vec2(1, 2), .dir = vec2(1  * d, 0 * d) },
-  { .pos = vec2(-5, -1), .dir = vec2(0.7071067f * d, 0.7071067f * d) },
-};
 
 bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
   float dott = dot(src->dir, dest->pos - src->pos);
   return dott < d && dott >= c;
 }
 
-void print_unit(Unit unit) {
-  cout << unit.pos.x << " " << unit.pos.y << endl;
-  cout << unit.dir.x << " " << unit.dir.y << endl << endl;
-}
-
 int main() {
-  float a = cos(135 / 2 * (M_PI / 180));
-  float c = d * a;
-  size_t s = sizeof(units) / sizeof(Unit);
-  size_t us = 10000;
-  Unit uns[us];// = (Unit *)malloc(sizeof(Unit) * us);
-  parse_units(uns, "units.csv");
+  Unit units[UNITS_COUNT];
+  parse_units(units, VISIBLE_DISTANCE, "units.csv");
 
   using std::chrono::high_resolution_clock;
   using std::chrono::duration_cast;
   using std::chrono::duration;
   using std::chrono::milliseconds;
 
-  float ds = d * d;
   auto t1 = high_resolution_clock::now();
   #pragma omp parallel for
-  for (int i = 0; i < us; i++) {
-    for (int j = 0; j < us; j++) {
-      if (sees(&uns[i], &uns[j], c, ds)) {
-        uns[i].counter += 1;
+  for (int i = 0; i < UNITS_COUNT; i++) {
+    for (int j = 0; j < UNITS_COUNT; j++) {
+      if (sees(&units[i], &units[j], VISIBLE_COEF, VISIBLE_DISTANCE_SQUARE)) {
+        units[i].counter += 1;
       }
     }
   }
@@ -52,8 +42,8 @@ int main() {
   duration<double, std::milli> ms_double = t2 - t1;
   std::cout << ms_double.count() << "ms" << endl;
   int counter = 0;
-  for (int i = 0; i < us; i++) {
-    counter += uns[i].counter;
+  for (int i = 0; i < UNITS_COUNT; i++) {
+    counter += units[i].counter;
   }
   std::cout << counter << endl;
 }
