@@ -16,13 +16,22 @@ float VISIBLE_DISTANCE_SQUARE = VISIBLE_DISTANCE * VISIBLE_DISTANCE;
 using namespace glm;
 using namespace std;
 
+Unit units[UNITS_COUNT];
+
 bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
   float dott = dot(src->dir, dest->pos - src->pos);
   return dott < d && dott >= c;
 }
 
+void mouse_button_callback(float x, float y) {
+  vec2 click = vec2(x, y);
+  for (int i = 0; i < UNITS_COUNT; i++) {
+    if (length((units[i].pos * renderer->zoomScale) - click) < (0.025f * renderer->zoomScale))
+      cout << i << endl;
+  }
+}
+
 int main() {
-  Unit units[UNITS_COUNT];
   parse_units(units, VISIBLE_DISTANCE, "units.csv");
 
   using std::chrono::high_resolution_clock;
@@ -48,10 +57,11 @@ int main() {
   }
   std::cout << counter << endl;
 
-  Renderer renderer = make_renderer();
+  make_renderer();
+  renderer->mouse_button_callback = mouse_button_callback;
 
-  for (size_t i = 0; should_close(&renderer); i++) {
-    render(&renderer, units, UNITS_COUNT);
+  for (size_t i = 0; should_close(renderer); i++) {
+    render(renderer, units, UNITS_COUNT);
   }
 
 	glfwTerminate();

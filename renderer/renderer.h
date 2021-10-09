@@ -7,8 +7,8 @@
 #include "setup.h"
 #include "../unit.h"
 
-#define SCR_WIDTH 1080
-#define SCR_HEIGHT 1080
+#define SCR_WIDTH 1080.0
+#define SCR_HEIGHT 1080.0
 #define UNIT_SIZE 0.025f
 
 typedef struct {
@@ -19,6 +19,7 @@ typedef struct {
   GLint zoomScaleUniform;
   float zoomScale;
   GLint defaultScaleUniform;
+  void (*mouse_button_callback)(float, float);
 } Renderer;
 
 static float vertices[] = {
@@ -30,15 +31,25 @@ static float vertices[] = {
   -1.0f, -1.0f,
 };
 
-static Renderer *renderer_static;
+Renderer *renderer;
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-  renderer_static->zoomScale += (float)yoffset/10.0f;
-  if (renderer_static->zoomScale < 0.1)
-    renderer_static->zoomScale = 0.1;
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+  renderer->zoomScale += (float)yoffset/10.0f;
+  if (renderer->zoomScale < 0.1)
+    renderer->zoomScale = 0.1;
 }
 
-Renderer make_renderer() {
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+  if((button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) == false)
+    return;
+  double x, y;
+  glfwGetCursorPos(window, &x, &y);
+  if (renderer->mouse_button_callback != NULL)
+    renderer->mouse_button_callback((float)(x / (SCR_WIDTH / 2)) - 1.0,
+                                           (float)(y / (SCR_HEIGHT / 2)) - 1.0);
+}
+
+void make_renderer() {
   glfwInit();
 
 	glfwWindowHint(GLFW_SAMPLES, 256);
@@ -54,8 +65,10 @@ Renderer make_renderer() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable( GL_BLEND );
   glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-  glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetScrollCallback(window, scroll_callback);
+
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
   GLuint program = reload_shaders("./renderer/shaders/main.vert", "./renderer/shaders/main.frag", 0);
   glUseProgram(program);
@@ -73,7 +86,8 @@ Renderer make_renderer() {
   GLint zoomScaleUniform = glGetUniformLocation(program, "zoomScale");
   GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
 
-  Renderer renderer = {
+  renderer = (Renderer *)malloc(sizeof(Renderer));
+  *renderer = Renderer {
     .window = window,
     .program = program,
     .vbo = vbo,
@@ -81,10 +95,9 @@ Renderer make_renderer() {
     .modelUniform = modelUniform,
     .zoomScaleUniform = zoomScaleUniform,
     .zoomScale = 1.0f,
-    .defaultScaleUniform = defaultScaleUniform
+    .defaultScaleUniform = defaultScaleUniform,
+    .mouse_button_callback = NULL
   };
-  renderer_static = &renderer;
-  return renderer;
 }
 
 void render(Renderer *renderer, Unit *units, size_t units_count) {
