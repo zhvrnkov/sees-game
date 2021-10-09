@@ -14,23 +14,25 @@ typedef struct {
   int counter;
 } Unit;
 
+float d = 20.0f;
+
 Unit units[] = {
-  { .pos_x = 1, .pos_y = 1, .dir_x = 0, .dir_y = 1 },
-  { .pos_x = 1, .pos_y = 2, .dir_x = 1, .dir_y = 0 },
-  { .pos_x = -5, .pos_y = -1, .dir_x = 0.7071067, .dir_y = 0.7071067 },
+  { .pos_x = 1, .pos_y = 1, .dir_x = 0 * d, .dir_y = 1 * d },
+  { .pos_x = 1, .pos_y = 2, .dir_x = 1  * d, .dir_y = 0 * d },
+  { .pos_x = -5, .pos_y = -1, .dir_x = 0.7071067f * d, .dir_y = 0.7071067f * d },
 };
 
-bool sees(const Unit *src, const Unit *dest, const float distance, const float c) {
+bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
   float dp_x = dest->pos_x - src->pos_x;
   float dp_y = dest->pos_y - src->pos_y;
-  float dpl = sqrt(dp_x * dp_x + dp_y * dp_y);
-  return dpl <= distance && (src->dir_x * (dp_x / dpl) + src->dir_y * (dp_y / dpl)) >= c;
+  float dott = (src->dir_x * dp_x + src->dir_y * dp_y);
+  return dott < d && dott >= c;
 }
 
 
 int main() {
   float a = cos(135 / 2 * (M_PI / 180));
-  float d = 20.0;
+  float c = d * a;
   size_t s = sizeof(units) / sizeof(Unit);
   size_t us = 10000;
   Unit uns[us];
@@ -43,11 +45,12 @@ int main() {
   using std::chrono::duration;
   using std::chrono::milliseconds;
 
+  float ds = d * d;
   auto t1 = high_resolution_clock::now();
   #pragma omp parallel for
   for (int i = 0; i < us; i++) {
     for (int j = 0; j < us; j++) {
-      if (sees(&uns[i], &uns[j], d, a)) {
+      if (sees(&uns[i], &uns[j], c, ds)) {
         uns[i].counter += 1;
       }
     }
