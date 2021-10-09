@@ -7,28 +7,23 @@ using namespace glm;
 using namespace std;
 
 typedef struct {
-  float pos_x;
-  float pos_y;
-  float dir_x;
-  float dir_y;
+  vec2 pos;
+  vec2 dir;
   int counter;
 } Unit;
 
 float d = 20.0f;
 
 Unit units[] = {
-  { .pos_x = 1, .pos_y = 1, .dir_x = 0 * d, .dir_y = 1 * d },
-  { .pos_x = 1, .pos_y = 2, .dir_x = 1  * d, .dir_y = 0 * d },
-  { .pos_x = -5, .pos_y = -1, .dir_x = 0.7071067f * d, .dir_y = 0.7071067f * d },
+  { .pos = vec2(1, 1), .dir = vec2(0 * d, 1 * d) },
+  { .pos = vec2(1, 2), .dir = vec2(1  * d, 0 * d) },
+  { .pos = vec2(-5, -1), .dir = vec2(0.7071067f * d, 0.7071067f * d) },
 };
 
 bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
-  float dp_x = dest->pos_x - src->pos_x;
-  float dp_y = dest->pos_y - src->pos_y;
-  float dott = (src->dir_x * dp_x + src->dir_y * dp_y);
+  float dott = dot(src->dir, dest->pos - src->pos);
   return dott < d && dott >= c;
 }
-
 
 int main() {
   float a = cos(135 / 2 * (M_PI / 180));
