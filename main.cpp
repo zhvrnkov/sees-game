@@ -4,6 +4,7 @@
 #include <chrono>
 #include "unit.h"
 #include "parser.h"
+#include "renderer/renderer.h"
 
 #define UNITS_COUNT 10000
 #define VISIBLE_ANGLE 135.0f
@@ -46,4 +47,12 @@ int main() {
     counter += units[i].counter;
   }
   std::cout << counter << endl;
+
+  Renderer renderer = make_renderer();
+
+  for (size_t i = 0; should_close(&renderer); i++) {
+    render(&renderer, units, UNITS_COUNT);
+  }
+
+	glfwTerminate();
 }
