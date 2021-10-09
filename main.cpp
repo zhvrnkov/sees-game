@@ -2,16 +2,11 @@
 #include <glm/glm.hpp>
 #include <cmath>
 #include <chrono>
+#include "unit.h"
+#include "parser.h"
 
 using namespace glm;
 using namespace std;
-
-typedef struct {
-  vec2 pos;
-  vec2 dir;
-  int counter;
-} Unit;
-
 float d = 20.0f;
 
 Unit units[] = {
@@ -25,15 +20,18 @@ bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
   return dott < d && dott >= c;
 }
 
+void print_unit(Unit unit) {
+  cout << unit.pos.x << " " << unit.pos.y << endl;
+  cout << unit.dir.x << " " << unit.dir.y << endl << endl;
+}
+
 int main() {
   float a = cos(135 / 2 * (M_PI / 180));
   float c = d * a;
   size_t s = sizeof(units) / sizeof(Unit);
   size_t us = 10000;
-  Unit uns[us];
-  for (int i = 0; i < us; i++) {
-    uns[i] = units[i % s];
-  }
+  Unit uns[us];// = (Unit *)malloc(sizeof(Unit) * us);
+  parse_units(uns, "units.csv");
 
   using std::chrono::high_resolution_clock;
   using std::chrono::duration_cast;
