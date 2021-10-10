@@ -46,6 +46,7 @@ typedef struct {
 typedef struct {
   void (*mouseButtonCallback)(double, double);
   void (*scrollCallback)(double, double);
+  void (*keyCallback)(int, int, int, int);
 } WindowPresenter;
 
 static float vertices[] = {
@@ -77,6 +78,12 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
   }
 }
 
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  if (windowPresenter.keyCallback != NULL) {
+    windowPresenter.keyCallback(key, scancode, action, mods);
+  }
+}
+
 void setupWindow() {
   glfwInit();
 
@@ -95,6 +102,7 @@ void setupWindow() {
 
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetScrollCallback(window, scroll_callback);
+  glfwSetKeyCallback(window, keyCallback);
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 }

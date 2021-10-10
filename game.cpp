@@ -18,14 +18,14 @@ void scrollCallback(double xoffset, double yoffset) {
     unitsRenderer.zoomScale = 0.1;
 }
 
-int countVisibleUnits(short *counter) {
+static int countVisibleUnits(short *counter) {
   int count = 0;
   for (int i = 0; i < UNITS_COUNT; i++)
     count += (int)counter[i];
   return count;
 }
 
-void mouseButtonCallbackVec(vec2 click) {
+static void mouseButtonCallbackVec(vec2 click) {
   bool foundUnitOnClick = false;
   bool isSelected;
   for (int i = 0; i < UNITS_COUNT; i++) {
@@ -50,6 +50,14 @@ void mouseButtonCallback(double x, double y) {
   mouseButtonCallbackVec(click);
 }
 
+static int initialUnitIndex = 0;
+void keyCallback(int key, int scancode, int action, int mods) {
+  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+    cout << "click" << endl;
+    mouseButtonCallbackVec(units[++initialUnitIndex].pos);
+  }
+}
+
 int main() {
   units = (Unit *)malloc(sizeof(Unit) * UNITS_COUNT);
   parse_units(units, VISIBLE_DISTANCE, "units.csv", UNITS_COUNT);
@@ -72,6 +80,7 @@ int main() {
   unitsRenderer.context = &context;
   windowPresenter.mouseButtonCallback = mouseButtonCallback;
   windowPresenter.scrollCallback = scrollCallback;
+  windowPresenter.keyCallback = keyCallback;
 
   context.units = units;
   context.units_count = UNITS_COUNT;
@@ -80,7 +89,7 @@ int main() {
   context.visibleDistance = VISIBLE_DISTANCE;
   context.visibleSectorAngle = VISIBLE_ANGLE;
 
-  mouseButtonCallbackVec(units[0].pos);
+  mouseButtonCallbackVec(units[initialUnitIndex].pos);
   for (size_t i = 0; should_close(); i++) {
     if (context.currentCameraPos != context.targetCameraPos) {
       vec2 diff = (context.targetCameraPos - context.currentCameraPos) / 10.0f;
