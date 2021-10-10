@@ -33,6 +33,7 @@ typedef struct {
   GLint cameraPosUniform;
   GLint visibleSectorAngleUniform;
   GLint directionUniform;
+  GLint isHighlightedUniform;
 } RenderProgram;
 
 typedef struct {
@@ -117,6 +118,7 @@ static RenderProgram makeUnitsProgram() {
   GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
   GLint isSelectedUniform = glGetUniformLocation(program, "isSelected");
   GLint cameraPosUniform = glGetUniformLocation(program, "cameraPos");
+  GLint isHighlightedUniform = glGetUniformLocation(program, "isHighlighted");
 
   RenderProgram output = {
     .program = program,
@@ -127,6 +129,7 @@ static RenderProgram makeUnitsProgram() {
     .defaultScaleUniform = defaultScaleUniform,
     .isSelectedUniform = isSelectedUniform,
     .cameraPosUniform = cameraPosUniform,
+    .isHighlightedUniform = isHighlightedUniform
   };
   return output;
 }
@@ -177,7 +180,7 @@ Renderer makeRenderer() {
   return output;
 }
 
-static void renderUnitsProgram(Renderer *renderer) {
+static void renderUnitsProgram(Renderer *renderer, Unit *selectedUnit) {
   RenderingContext *context = renderer->context;
   RenderProgram *program = &renderer->unitsProgram;
   glUseProgram(program->program);
@@ -188,11 +191,17 @@ static void renderUnitsProgram(Renderer *renderer) {
   for (size_t i = 0; i < context->units_count; i++) {
     glUniform2fv(program->modelUniform, 1, (float *)&(context->units[i].pos[0]));
     glUniform1i(program->isSelectedUniform, context->units[i].isSelected);
+    if (selectedUnit) {
+      glUniform1i(program->isHighlightedUniform, (int)selectedUnit->counter[i]);
+    }
+    else {
+      glUniform1i(program->isHighlightedUniform, false);
+    }
     glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
   }
 }
 
-static void renderVisibleSectorProgram(Renderer *renderer) {
+static Unit *renderVisibleSectorProgram(Renderer *renderer) {
   RenderingContext *context = renderer->context;
   Unit *selectedUnit = NULL;
   for (size_t i = 0; i < context->units_count; i++) {
@@ -202,7 +211,7 @@ static void renderVisibleSectorProgram(Renderer *renderer) {
     }
   }
   if (selectedUnit == NULL)
-    return;
+    return NULL;
   RenderProgram *program = &renderer->visibleSectorProgram;
   glUseProgram(program->program);
   glBindVertexArray(program->vao);
@@ -213,12 +222,13 @@ static void renderVisibleSectorProgram(Renderer *renderer) {
   glUniform2fv(program->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
   glUniform2fv(program->modelUniform, 1, (float *)&(selectedUnit->pos[0]));
   glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
+  return selectedUnit;
 }
 
 void render(Renderer *renderer) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  renderUnitsProgram(renderer);
-  renderVisibleSectorProgram(renderer);
+  Unit *selectedUnit = renderVisibleSectorProgram(renderer);
+  renderUnitsProgram(renderer, selectedUnit);
   glfwSwapBuffers(window);
   glfwPollEvents();
 }

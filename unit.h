@@ -9,7 +9,7 @@ using namespace std;
 typedef struct {
   vec2 pos;
   vec2 dir;
-  int counter;
+  short counter[10000];
   bool isSelected;
 } Unit;
 
