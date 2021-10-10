@@ -6,10 +6,13 @@
 #include <GLFW/glfw3.h>
 #include "setup.h"
 #include "../unit.h"
+#include <glm/glm.hpp>
 
 #define SCR_WIDTH 1080.0
 #define SCR_HEIGHT 1080.0
 #define UNIT_SIZE 0.025f
+
+using namespace glm;
 
 typedef struct {
   GLFWwindow* window;
@@ -20,8 +23,16 @@ typedef struct {
   float zoomScale;
   GLint defaultScaleUniform;
   GLint isSelectedUniform;
+  GLint cameraPosUniform;
   void (*mouse_button_callback)(double, double);
 } Renderer;
+
+typedef struct {
+  Unit *units;
+  size_t units_count;
+  vec2 currentCameraPos;
+  vec2 targetCameraPos;
+} RenderingContext;
 
 static float vertices[] = {
   -1.0f, -1.0f,
@@ -87,6 +98,7 @@ void make_renderer() {
   GLint zoomScaleUniform = glGetUniformLocation(program, "zoomScale");
   GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
   GLint isSelectedUniform = glGetUniformLocation(program, "isSelected");
+  GLint cameraPosUniform = glGetUniformLocation(program, "cameraPos");
 
   renderer = (Renderer *)malloc(sizeof(Renderer));
   *renderer = Renderer {
@@ -99,17 +111,19 @@ void make_renderer() {
     .zoomScale = 1.0f,
     .defaultScaleUniform = defaultScaleUniform,
     .isSelectedUniform = isSelectedUniform,
+    .cameraPosUniform = cameraPosUniform,
     .mouse_button_callback = NULL,
   };
 }
 
-void render(Renderer *renderer, Unit *units, size_t units_count) {
+void render(Renderer *renderer, RenderingContext *context) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUniform1f(renderer->zoomScaleUniform, renderer->zoomScale);
   glUniform1f(renderer->defaultScaleUniform, 0.025f);
-  for (size_t i = 0; i < units_count; i++) {
-    glUniform2fv(renderer->modelUniform, 1, (float *)&units[i].pos[0]);
-    glUniform1i(renderer->isSelectedUniform, units[i].isSelected);
+  glUniform2fv(renderer->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
+  for (size_t i = 0; i < context->units_count; i++) {
+    glUniform2fv(renderer->modelUniform, 1, (float *)&(context->units[i].pos[0]));
+    glUniform1i(renderer->isSelectedUniform, context->units[i].isSelected);
     glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
   }
   glfwSwapBuffers(renderer->window);

@@ -17,6 +17,7 @@ using namespace glm;
 using namespace std;
 
 Unit units[UNITS_COUNT];
+RenderingContext context;
 
 bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
   float dott = dot(src->dir, dest->pos - src->pos);
@@ -24,9 +25,12 @@ bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
 }
 
 void mouse_button_callback(double x, double y) {
-  vec2 click = vec2(x, y) / renderer->zoomScale;
+  vec2 click = vec2(x, y) / renderer->zoomScale + context.currentCameraPos;
   for (int i = 0; i < UNITS_COUNT; i++) {
     units[i].isSelected = length(click - units[i].pos) < 0.025f;
+    if (units[i].isSelected) {
+      context.targetCameraPos = units[i].pos;
+    }
   }
 }
 
@@ -59,8 +63,17 @@ int main() {
   make_renderer();
   renderer->mouse_button_callback = mouse_button_callback;
 
+  context.units = units;
+  context.units_count = UNITS_COUNT;
+  context.currentCameraPos = vec2(0.0);
+  context.targetCameraPos = context.currentCameraPos;
+
   for (size_t i = 0; should_close(renderer); i++) {
-    render(renderer, units, UNITS_COUNT);
+    if (context.currentCameraPos != context.targetCameraPos) {
+      vec2 diff = (context.targetCameraPos - context.currentCameraPos) / 10.0f;
+      context.currentCameraPos += diff;
+    }
+    render(renderer, &context);
   }
 
 	glfwTerminate();
