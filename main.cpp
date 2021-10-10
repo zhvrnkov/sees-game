@@ -26,8 +26,7 @@ bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
 void mouse_button_callback(double x, double y) {
   vec2 click = vec2(x, y) / renderer->zoomScale;
   for (int i = 0; i < UNITS_COUNT; i++) {
-    if (length(click - units[i].pos) < 0.025f)
-      cout << i << endl;
+    units[i].isSelected = length(click - units[i].pos) < 0.025f;
   }
 }
 

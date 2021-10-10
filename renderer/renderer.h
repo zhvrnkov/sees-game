@@ -19,6 +19,7 @@ typedef struct {
   GLint zoomScaleUniform;
   float zoomScale;
   GLint defaultScaleUniform;
+  GLint isSelectedUniform;
   void (*mouse_button_callback)(double, double);
 } Renderer;
 
@@ -85,6 +86,7 @@ void make_renderer() {
   GLint modelUniform = glGetUniformLocation(program, "model");
   GLint zoomScaleUniform = glGetUniformLocation(program, "zoomScale");
   GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
+  GLint isSelectedUniform = glGetUniformLocation(program, "isSelected");
 
   renderer = (Renderer *)malloc(sizeof(Renderer));
   *renderer = Renderer {
@@ -96,7 +98,8 @@ void make_renderer() {
     .zoomScaleUniform = zoomScaleUniform,
     .zoomScale = 1.0f,
     .defaultScaleUniform = defaultScaleUniform,
-    .mouse_button_callback = NULL
+    .isSelectedUniform = isSelectedUniform,
+    .mouse_button_callback = NULL,
   };
 }
 
@@ -106,6 +109,7 @@ void render(Renderer *renderer, Unit *units, size_t units_count) {
   glUniform1f(renderer->defaultScaleUniform, 0.025f);
   for (size_t i = 0; i < units_count; i++) {
     glUniform2fv(renderer->modelUniform, 1, (float *)&units[i].pos[0]);
+    glUniform1i(renderer->isSelectedUniform, units[i].isSelected);
     glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
   }
   glfwSwapBuffers(renderer->window);

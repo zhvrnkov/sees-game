@@ -3,6 +3,7 @@
 uniform vec2 model;
 uniform float zoomScale;
 uniform float defaultScale;
+uniform bool isSelected;
 
 out vec4 FragColor;
 
@@ -13,6 +14,6 @@ void main() {
     FragColor = vec4(0.0, 0.0, 0.0, 0.0);
   }
   else {
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    FragColor = isSelected ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
   } 
 }

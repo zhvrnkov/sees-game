@@ -10,6 +10,7 @@ typedef struct {
   vec2 pos;
   vec2 dir;
   int counter;
+  bool isSelected;
 } Unit;
 
 void print_unit(Unit unit) {
