@@ -6,7 +6,6 @@
 #include "parser.h"
 #include "renderer/renderer.h"
 
-#define UNITS_COUNT 10000
 #define VISIBLE_ANGLE 135.0f
 #define VISIBLE_DISTANCE 1.0f
 
@@ -43,6 +42,13 @@ void scrollCallback(double xoffset, double yoffset) {
     unitsRenderer.zoomScale = 0.1;
 }
 
+int countVisibleUnits(short *counter) {
+  int count = 0;
+  for (int i = 0; i < UNITS_COUNT; i++)
+    count += (int)counter[i];
+  return count;
+}
+
 void mouseButtonCallbackVec(vec2 click) {
   bool foundUnitOnClick = false;
   bool isSelected;
@@ -57,8 +63,8 @@ void mouseButtonCallbackVec(vec2 click) {
     }
     if (units[i].isSelected) {
       context.targetCameraPos = units[i].pos;
-      cout << units[i].counter << endl;
-      cout << units[i].pos.x << " " << units[i].pos.y << endl << endl;
+      cout << "Clicked on unit at " << i << " index. ";
+      cout << "It sees " << countVisibleUnits(units[i].counter) << " units." << endl;
     }
   }
 }

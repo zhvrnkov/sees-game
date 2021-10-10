@@ -3,13 +3,15 @@
 
 #include <glm/glm.hpp>
 
+#define UNITS_COUNT 10000
+
 using namespace glm;
 using namespace std;
 
 typedef struct {
   vec2 pos;
   vec2 dir;
-  short counter[10000];
+  short counter[UNITS_COUNT];
   bool isSelected;
 } Unit;
 
