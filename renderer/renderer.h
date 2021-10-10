@@ -19,7 +19,7 @@ typedef struct {
   GLint zoomScaleUniform;
   float zoomScale;
   GLint defaultScaleUniform;
-  void (*mouse_button_callback)(float, float);
+  void (*mouse_button_callback)(double, double);
 } Renderer;
 
 static float vertices[] = {
@@ -45,8 +45,8 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
   double x, y;
   glfwGetCursorPos(window, &x, &y);
   if (renderer->mouse_button_callback != NULL)
-    renderer->mouse_button_callback((float)(x / (SCR_WIDTH / 2)) - 1.0,
-                                           (float)(y / (SCR_HEIGHT / 2)) - 1.0);
+    renderer->mouse_button_callback((x / (SCR_WIDTH / 2.0)) - 1.0,
+                                    1.0 - (y / (SCR_HEIGHT / 2.0)));
 }
 
 void make_renderer() {

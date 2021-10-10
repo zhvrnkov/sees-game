@@ -7,6 +7,6 @@ uniform float defaultScale;
 out vec2 fragPos;
 
 void main() {
-  fragPos = aPos * defaultScale * zoomScale + (model * zoomScale);
+  fragPos = (aPos * defaultScale * zoomScale) + (model * zoomScale);
   gl_Position = vec4(fragPos, 0, 1);
 }
