@@ -43,16 +43,29 @@ void scrollCallback(double xoffset, double yoffset) {
     unitsRenderer.zoomScale = 0.1;
 }
 
-void mouseButtonCallback(double x, double y) {
-  vec2 click = vec2(x, y) / unitsRenderer.zoomScale + context.currentCameraPos;
+void mouseButtonCallbackVec(vec2 click) {
+  bool foundUnitOnClick = false;
+  bool isSelected;
   for (int i = 0; i < UNITS_COUNT; i++) {
-    units[i].isSelected = length(click - units[i].pos) < 0.025f;
+    if (!foundUnitOnClick) {
+      isSelected = length(click - units[i].pos) < 0.025f;
+      foundUnitOnClick = isSelected;
+      units[i].isSelected = isSelected;
+    }
+    else {
+      units[i].isSelected = false;
+    }
     if (units[i].isSelected) {
       context.targetCameraPos = units[i].pos;
       cout << units[i].counter << endl;
       cout << units[i].pos.x << " " << units[i].pos.y << endl << endl;
     }
   }
+}
+
+void mouseButtonCallback(double x, double y) {
+  vec2 click = vec2(x, y) / unitsRenderer.zoomScale + context.currentCameraPos;
+  mouseButtonCallbackVec(click);
 }
 
 int main() {
@@ -101,6 +114,7 @@ int main() {
   context.visibleDistance = VISIBLE_DISTANCE;
   context.visibleSectorAngle = VISIBLE_ANGLE;
 
+  mouseButtonCallbackVec(units[0].pos);
   for (size_t i = 0; should_close(); i++) {
     if (context.currentCameraPos != context.targetCameraPos) {
       vec2 diff = (context.targetCameraPos - context.currentCameraPos) / 10.0f;
