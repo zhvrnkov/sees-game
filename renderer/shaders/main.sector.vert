@@ -5,13 +5,16 @@ uniform vec2 model;
 uniform float zoomScale;
 uniform float defaultScale;
 uniform vec2 cameraPos;
+uniform float visibleDistance;
 
 out vec2 fragPos;
 flat out vec2 unitCenter;
+flat out float radius;
 
 void main() {
   unitCenter = ((model - cameraPos) * zoomScale);
-  fragPos = (aPos * defaultScale * zoomScale) + unitCenter + (defaultScale * zoomScale);
+  radius = (defaultScale * zoomScale * 2.0);
+  fragPos = (aPos * radius) + unitCenter;
   
   gl_Position = vec4(fragPos, 0, 1);
 }

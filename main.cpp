@@ -77,6 +77,8 @@ int main() {
   context.units_count = UNITS_COUNT;
   context.currentCameraPos = vec2(0.0);
   context.targetCameraPos = context.currentCameraPos;
+  context.visibleDistance = 0.025f * VISIBLE_DISTANCE;
+  context.visibleSectorAngle = VISIBLE_ANGLE;
 
   for (size_t i = 0; should_close(); i++) {
     if (context.currentCameraPos != context.targetCameraPos) {

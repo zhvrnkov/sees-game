@@ -19,6 +19,8 @@ typedef struct {
   size_t units_count;
   vec2 currentCameraPos;
   vec2 targetCameraPos;
+  float visibleDistance;
+  float visibleSectorAngle;
 } RenderingContext;
 
 typedef struct {
@@ -29,6 +31,7 @@ typedef struct {
   GLint defaultScaleUniform;
   GLint isSelectedUniform;
   GLint cameraPosUniform;
+  GLint visibleSectorAngleUniform;
 } RenderProgram;
 
 typedef struct {
@@ -135,12 +138,14 @@ static RenderProgram makeVisibleSectorProgram() {
   GLint zoomScaleUniform = glGetUniformLocation(program, "zoomScale");
   GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
   GLint cameraPosUniform = glGetUniformLocation(program, "cameraPos");
+  GLint visibleSectorAngleUniform = glGetUniformLocation(program, "visibleSectorAngle");
 
   GLuint vbo, vao;
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);
   glBindVertexArray(vao);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void*)0);
@@ -153,6 +158,7 @@ static RenderProgram makeVisibleSectorProgram() {
     .zoomScaleUniform = zoomScaleUniform,
     .defaultScaleUniform = defaultScaleUniform,
     .cameraPosUniform = cameraPosUniform,
+    .visibleSectorAngleUniform = visibleSectorAngleUniform
   };
   return output;
 }
@@ -172,6 +178,7 @@ static void renderUnitsProgram(Renderer *renderer) {
   RenderingContext *context = renderer->context;
   RenderProgram *program = &renderer->unitsProgram;
   glUseProgram(program->program);
+  glBindVertexArray(program->vao);
   glUniform1f(program->zoomScaleUniform, renderer->zoomScale);
   glUniform1f(program->defaultScaleUniform, 0.025f);
   glUniform2fv(program->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
@@ -195,8 +202,10 @@ static void renderVisibleSectorProgram(Renderer *renderer) {
     return;
   RenderProgram *program = &renderer->visibleSectorProgram;
   glUseProgram(program->program);
+  glBindVertexArray(program->vao);
   glUniform1f(program->zoomScaleUniform, renderer->zoomScale);
-  glUniform1f(program->defaultScaleUniform, 0.025f);
+  glUniform1f(program->defaultScaleUniform, context->visibleDistance);
+  glUniform1f(program->visibleSectorAngleUniform, context->visibleSectorAngle);
   glUniform2fv(program->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
   glUniform2fv(program->modelUniform, 1, (float *)&(selectedUnit->pos[0]));
   glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
