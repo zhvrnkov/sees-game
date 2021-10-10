@@ -26,7 +26,7 @@ void parse_units(Unit *units, float distance, string path, size_t units_count) {
     units[units_index].pos = vec2(floats[0], floats[1]);
     units[units_index].dir = vec2(floats[2], floats[3]) * distance;
     for (int i = 0; i < 10000; i++)
-      units[units_index].counter[i] = 0;
+      units[units_index].isSeeUnitIndices[i] = 0;
     units_index += 1;
   }
 }

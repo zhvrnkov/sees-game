@@ -1,16 +1,9 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <cmath>
-#include <chrono>
 #include "unit.h"
 #include "parser.h"
 #include "renderer/renderer.h"
-
-#define VISIBLE_ANGLE 135.0f
-#define VISIBLE_DISTANCE 1.0f
-
-float VISIBLE_COEF = cos(VISIBLE_ANGLE / 2 * (M_PI / 180)) * VISIBLE_DISTANCE;
-float VISIBLE_DISTANCE_SQUARE = VISIBLE_DISTANCE * VISIBLE_DISTANCE;
 
 using namespace glm;
 using namespace std;
@@ -18,23 +11,6 @@ using namespace std;
 Unit *units;
 RenderingContext context;
 Renderer unitsRenderer;
-
-typedef struct {
-  bool val;
-  bool yal;
-} S;
-
-S sees(const Unit *src, const Unit *dest, const float c, const float d) {
-  vec2 destPosFromSrcPos = dest->pos - src->pos;
-  float l = length(destPosFromSrcPos);
-  vec2 normDestPosFromSrcPos = destPosFromSrcPos / l;
-  float dott = dot(src->dir, normDestPosFromSrcPos);
-  float dottt = dot(dest->dir, -normDestPosFromSrcPos);                          
-  return {
-    .val = l < d && dott > c,
-    .yal = l < d && dottt > c
-  };
-}
 
 void scrollCallback(double xoffset, double yoffset) {
   unitsRenderer.zoomScale += (float)yoffset/10.0f;
@@ -64,7 +40,7 @@ void mouseButtonCallbackVec(vec2 click) {
     if (units[i].isSelected) {
       context.targetCameraPos = units[i].pos;
       cout << "Clicked on unit at " << i << " index. ";
-      cout << "It sees " << countVisibleUnits(units[i].counter) << " units." << endl;
+      cout << "It sees " << countVisibleUnits(units[i].isSeeUnitIndices) << " units." << endl;
     }
   }
 }
@@ -78,34 +54,18 @@ int main() {
   units = (Unit *)malloc(sizeof(Unit) * UNITS_COUNT);
   parse_units(units, VISIBLE_DISTANCE, "units.csv", UNITS_COUNT);
 
-  using std::chrono::high_resolution_clock;
-  using std::chrono::duration_cast;
-  using std::chrono::duration;
-  using std::chrono::milliseconds;
-
-  auto t1 = high_resolution_clock::now();
 #pragma omp parallel for
   for (int i = 0; i < UNITS_COUNT; i++) {
     for (int j = i; j < UNITS_COUNT; j++) {
-      S x = sees(&units[i], &units[j], VISIBLE_COEF, VISIBLE_DISTANCE);
-      if (x.val) {
-        units[i].counter[j] = 1;
+      SeesResult result = sees(&units[i], &units[j], VISIBLE_COEF, VISIBLE_DISTANCE);
+      if (result.isSrcSeesDest) {
+        units[i].isSeeUnitIndices[j] = 1;
       }
-      if (x.yal) {
-        units[j].counter[i] = 1;
+      if (result.isDestSeesSrc) {
+        units[j].isSeeUnitIndices[i] = 1;
       }
     }
   }
-  auto t2 = high_resolution_clock::now();
-  duration<double, std::milli> ms_double = t2 - t1;
-  std::cout << ms_double.count() << "ms" << endl;
-  int counter = 0;
-  for (int i = 0; i < UNITS_COUNT; i++) {
-    for (int j = 0; j < UNITS_COUNT; j++) {
-      counter += units[i].counter[j];
-    }
-  }
-  std::cout << counter << endl;
 
   setupWindow();
   unitsRenderer = makeRenderer();
@@ -130,4 +90,5 @@ int main() {
   }
 
   glfwTerminate();
+  return 0;
 }

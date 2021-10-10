@@ -8,8 +8,8 @@
 #include "../unit.h"
 #include <glm/glm.hpp>
 
-#define SCR_WIDTH 500.0
-#define SCR_HEIGHT 500.0
+#define SCR_WIDTH 1080.0
+#define SCR_HEIGHT 1080.0
 #define UNIT_SIZE 0.025f
 
 using namespace glm;
@@ -191,7 +191,7 @@ static void renderUnitsProgram(Renderer *renderer, Unit *selectedUnit) {
     glUniform2fv(program->modelUniform, 1, (float *)&(context->units[i].pos[0]));
     glUniform1i(program->isSelectedUniform, context->units[i].isSelected);
     if (selectedUnit) {
-      glUniform1i(program->isHighlightedUniform, (int)selectedUnit->counter[i]);
+      glUniform1i(program->isHighlightedUniform, (int)selectedUnit->isSeeUnitIndices[i]);
     }
     else {
       glUniform1i(program->isHighlightedUniform, false);
