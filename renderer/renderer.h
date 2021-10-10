@@ -8,8 +8,8 @@
 #include "../unit.h"
 #include <glm/glm.hpp>
 
-#define SCR_WIDTH 1080.0
-#define SCR_HEIGHT 1080.0
+#define SCR_WIDTH 500.0
+#define SCR_HEIGHT 500.0
 #define UNIT_SIZE 0.025f
 
 using namespace glm;
@@ -92,7 +92,6 @@ void setupWindow() {
   glewInit();
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable( GL_BLEND );
-  glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetScrollCallback(window, scroll_callback);
