@@ -1,6 +1,5 @@
 #version 330 core
 
-uniform vec2 model;
 uniform float zoomScale;
 uniform float defaultScale;
 uniform bool isSelected;

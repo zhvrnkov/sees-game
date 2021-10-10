@@ -128,7 +128,7 @@ static RenderProgram makeUnitsProgram() {
 }
 
 static RenderProgram makeVisibleSectorProgram() {
-  GLuint program = reload_shaders("./renderer/shaders/main.vert", "./renderer/shaders/main.frag", 0);
+  GLuint program = reload_shaders("./renderer/shaders/main.sector.vert", "./renderer/shaders/main.sector.frag", 0);
   glUseProgram(program);
 
   GLint modelUniform = glGetUniformLocation(program, "model");
@@ -182,9 +182,30 @@ static void renderUnitsProgram(Renderer *renderer) {
   }
 }
 
+static void renderVisibleSectorProgram(Renderer *renderer) {
+  RenderingContext *context = renderer->context;
+  Unit *selectedUnit = NULL;
+  for (size_t i = 0; i < context->units_count; i++) {
+    if (context->units[i].isSelected) {
+      selectedUnit = &context->units[i];
+      break;
+    }
+  }
+  if (selectedUnit == NULL)
+    return;
+  RenderProgram *program = &renderer->visibleSectorProgram;
+  glUseProgram(program->program);
+  glUniform1f(program->zoomScaleUniform, renderer->zoomScale);
+  glUniform1f(program->defaultScaleUniform, 0.025f);
+  glUniform2fv(program->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
+  glUniform2fv(program->modelUniform, 1, (float *)&(selectedUnit->pos[0]));
+  glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
+}
+
 void render(Renderer *renderer) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   renderUnitsProgram(renderer);
+  renderVisibleSectorProgram(renderer);
   glfwSwapBuffers(window);
   glfwPollEvents();
 }
