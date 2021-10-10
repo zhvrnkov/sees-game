@@ -8,9 +8,9 @@
 
 #define UNITS_COUNT 10000
 #define VISIBLE_ANGLE 135.0f
-#define VISIBLE_DISTANCE 1.0f
+#define VISIBLE_DISTANCE 0.3f
 
-float VISIBLE_COEF = cos(VISIBLE_ANGLE / 2 * (M_PI / 180)) * VISIBLE_DISTANCE;
+float VISIBLE_COEF = cos(VISIBLE_ANGLE / 2 * (M_PI / 180));
 float VISIBLE_DISTANCE_SQUARE = VISIBLE_DISTANCE * VISIBLE_DISTANCE;
 
 using namespace glm;
@@ -21,8 +21,11 @@ RenderingContext context;
 Renderer unitsRenderer;
 
 bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
-  float dott = dot(src->dir, dest->pos - src->pos);
-  return dott < d && dott >= c;
+  vec2 normDir = normalize(src->dir);
+  vec2 normDS = normalize(dest->pos - src->pos);
+  float l = length(dest->pos - src->pos);
+  float dott = dot(normDir, normDS);
+  return l < d && dott > c;
 }
 
 void scrollCallback(double xoffset, double yoffset) {
@@ -37,6 +40,8 @@ void mouseButtonCallback(double x, double y) {
     units[i].isSelected = length(click - units[i].pos) < 0.025f;
     if (units[i].isSelected) {
       context.targetCameraPos = units[i].pos;
+      cout << units[i].counter << endl;
+      cout << units[i].pos.x << " " << units[i].pos.y << endl << endl;
     }
   }
 }
@@ -53,7 +58,7 @@ int main() {
   #pragma omp parallel for
   for (int i = 0; i < UNITS_COUNT; i++) {
     for (int j = 0; j < UNITS_COUNT; j++) {
-      if (sees(&units[i], &units[j], VISIBLE_COEF, VISIBLE_DISTANCE_SQUARE)) {
+      if (sees(&units[i], &units[j], VISIBLE_COEF, VISIBLE_DISTANCE)) {
         units[i].counter += 1;
       }
     }
@@ -77,7 +82,7 @@ int main() {
   context.units_count = UNITS_COUNT;
   context.currentCameraPos = vec2(0.0);
   context.targetCameraPos = context.currentCameraPos;
-  context.visibleDistance = 0.025f * VISIBLE_DISTANCE;
+  context.visibleDistance = VISIBLE_DISTANCE;
   context.visibleSectorAngle = VISIBLE_ANGLE;
 
   for (size_t i = 0; should_close(); i++) {

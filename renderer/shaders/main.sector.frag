@@ -18,7 +18,7 @@ void main() {
   vec2 normDir = normalize(direction);
   // idk why 360.0f and not 180.0f, but it works
   float visibleSectorAngleRad = visibleSectorAngle * pi/360.0f;
-  if (length(point) > (defaultScale * zoomScale * 2.0)) {
+  if (length(point) > (defaultScale * zoomScale)) {
     FragColor = vec4(0.0, 0.0, 0.0, 0.0);
   }
   else if (dot(normPoint, normDir) > cos(visibleSectorAngleRad)) {
