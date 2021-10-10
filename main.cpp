@@ -57,7 +57,7 @@ void mouseButtonCallback(double x, double y) {
 
 int main() {
   units = (Unit *)malloc(sizeof(Unit) * UNITS_COUNT);
-  parse_units(units, VISIBLE_DISTANCE, "units.csv");
+  parse_units(units, VISIBLE_DISTANCE, "units.csv", UNITS_COUNT);
 
   using std::chrono::high_resolution_clock;
   using std::chrono::duration_cast;

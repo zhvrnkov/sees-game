@@ -9,13 +9,14 @@
 
 using namespace std;
 
-void parse_units(Unit *units, float distance, string path) {
+void parse_units(Unit *units, float distance, string path, size_t units_count) {
   ifstream file;
   file.open(path, ios::in);
   string line;
   float floats[4];
   int units_index = 0;
-  while (file.rdbuf()->in_avail()) {
+  while (units_count > 0) {
+    units_count -= 1;
     for (int i = 0; i < 4; i++) {
       getline(file, line);
       istringstream in(line);
