@@ -32,6 +32,7 @@ typedef struct {
   GLint isSelectedUniform;
   GLint cameraPosUniform;
   GLint visibleSectorAngleUniform;
+  GLint directionUniform;
 } RenderProgram;
 
 typedef struct {
@@ -139,6 +140,7 @@ static RenderProgram makeVisibleSectorProgram() {
   GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
   GLint cameraPosUniform = glGetUniformLocation(program, "cameraPos");
   GLint visibleSectorAngleUniform = glGetUniformLocation(program, "visibleSectorAngle");
+  GLint directionUniform = glGetUniformLocation(program, "direction");
 
   GLuint vbo, vao;
   glGenVertexArrays(1, &vao);
@@ -158,7 +160,8 @@ static RenderProgram makeVisibleSectorProgram() {
     .zoomScaleUniform = zoomScaleUniform,
     .defaultScaleUniform = defaultScaleUniform,
     .cameraPosUniform = cameraPosUniform,
-    .visibleSectorAngleUniform = visibleSectorAngleUniform
+    .visibleSectorAngleUniform = visibleSectorAngleUniform,
+    .directionUniform = directionUniform
   };
   return output;
 }
@@ -206,6 +209,7 @@ static void renderVisibleSectorProgram(Renderer *renderer) {
   glUniform1f(program->zoomScaleUniform, renderer->zoomScale);
   glUniform1f(program->defaultScaleUniform, context->visibleDistance);
   glUniform1f(program->visibleSectorAngleUniform, context->visibleSectorAngle);
+  glUniform2fv(program->directionUniform, 1, (float *)&(selectedUnit->dir[0]));
   glUniform2fv(program->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
   glUniform2fv(program->modelUniform, 1, (float *)&(selectedUnit->pos[0]));
   glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));

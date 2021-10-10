@@ -6,10 +6,18 @@ uniform float zoomScale;
 uniform float defaultScale;
 uniform vec2 cameraPos;
 uniform float visibleDistance;
+uniform float visibleSectorAngle;
 
 out vec2 fragPos;
 flat out vec2 unitCenter;
 flat out float radius;
+
+float sign(float x) {
+  if (x > 0) 
+    return 1.0;
+  else 
+    return -1.0;
+}
 
 void main() {
   unitCenter = ((model - cameraPos) * zoomScale);
