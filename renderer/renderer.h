@@ -15,40 +15,50 @@
 using namespace glm;
 
 typedef struct {
-  GLFWwindow* window;
-  GLuint program;
-  GLuint vbo, vao;
-  GLint modelUniform;
-  GLint zoomScaleUniform;
-  float zoomScale;
-  GLint defaultScaleUniform;
-  GLint isSelectedUniform;
-  GLint cameraPosUniform;
-  void (*mouse_button_callback)(double, double);
-} Renderer;
-
-typedef struct {
   Unit *units;
   size_t units_count;
   vec2 currentCameraPos;
   vec2 targetCameraPos;
 } RenderingContext;
 
+typedef struct {
+  GLuint program;
+  GLuint vbo, vao;
+  GLint modelUniform;
+  GLint zoomScaleUniform;
+  GLint defaultScaleUniform;
+  GLint isSelectedUniform;
+  GLint cameraPosUniform;
+} RenderProgram;
+
+typedef struct {
+  RenderProgram unitsProgram;
+  RenderProgram visibleSectorProgram;
+  float zoomScale;
+  RenderingContext *context;
+} Renderer;
+
+typedef struct {
+  void (*mouseButtonCallback)(double, double);
+  void (*scrollCallback)(double, double);
+} WindowPresenter;
+
 static float vertices[] = {
   -1.0f, -1.0f,
-   1.0f, -1.0f,
-   1.0f,  1.0f,
-   1.0f,  1.0f,
+  1.0f, -1.0f,
+  1.0f,  1.0f,
+  1.0f,  1.0f,
   -1.0f,  1.0f,
   -1.0f, -1.0f,
 };
 
-Renderer *renderer;
+WindowPresenter windowPresenter;
+GLFWwindow *window;
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-  renderer->zoomScale += (float)yoffset/10.0f;
-  if (renderer->zoomScale < 0.1)
-    renderer->zoomScale = 0.1;
+  if (windowPresenter.scrollCallback != NULL) {
+    windowPresenter.scrollCallback(xoffset, yoffset);
+  }
 }
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -56,12 +66,13 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     return;
   double x, y;
   glfwGetCursorPos(window, &x, &y);
-  if (renderer->mouse_button_callback != NULL)
-    renderer->mouse_button_callback((x / (SCR_WIDTH / 2.0)) - 1.0,
-                                    1.0 - (y / (SCR_HEIGHT / 2.0)));
+  if (windowPresenter.mouseButtonCallback != NULL) {
+    windowPresenter.mouseButtonCallback((x / (SCR_WIDTH / 2.0)) - 1.0,
+                                        1.0 - (y / (SCR_HEIGHT / 2.0)));
+  }
 }
 
-void make_renderer() {
+void setupWindow() {
   glfwInit();
 
 	glfwWindowHint(GLFW_SAMPLES, 256);
@@ -70,7 +81,7 @@ void make_renderer() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT,"Tutorial 02 - Red triangle", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT,"Tutorial 02 - Red triangle", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glewExperimental = 1;
   glewInit();
@@ -82,6 +93,9 @@ void make_renderer() {
   glfwSetScrollCallback(window, scroll_callback);
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+}
+
+static RenderProgram makeUnitsProgram() {
   GLuint program = reload_shaders("./renderer/shaders/main.vert", "./renderer/shaders/main.frag", 0);
   glUseProgram(program);
 
@@ -100,39 +114,84 @@ void make_renderer() {
   GLint isSelectedUniform = glGetUniformLocation(program, "isSelected");
   GLint cameraPosUniform = glGetUniformLocation(program, "cameraPos");
 
-  renderer = (Renderer *)malloc(sizeof(Renderer));
-  *renderer = Renderer {
-    .window = window,
+  RenderProgram output = {
     .program = program,
     .vbo = vbo,
     .vao = vao,
     .modelUniform = modelUniform,
     .zoomScaleUniform = zoomScaleUniform,
-    .zoomScale = 1.0f,
     .defaultScaleUniform = defaultScaleUniform,
     .isSelectedUniform = isSelectedUniform,
     .cameraPosUniform = cameraPosUniform,
-    .mouse_button_callback = NULL,
   };
+  return output;
 }
 
-void render(Renderer *renderer, RenderingContext *context) {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUniform1f(renderer->zoomScaleUniform, renderer->zoomScale);
-  glUniform1f(renderer->defaultScaleUniform, 0.025f);
-  glUniform2fv(renderer->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
+static RenderProgram makeVisibleSectorProgram() {
+  GLuint program = reload_shaders("./renderer/shaders/main.vert", "./renderer/shaders/main.frag", 0);
+  glUseProgram(program);
+
+  GLint modelUniform = glGetUniformLocation(program, "model");
+  GLint zoomScaleUniform = glGetUniformLocation(program, "zoomScale");
+  GLint defaultScaleUniform = glGetUniformLocation(program, "defaultScale");
+  GLint cameraPosUniform = glGetUniformLocation(program, "cameraPos");
+
+  GLuint vbo, vao;
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+  glBindVertexArray(vao);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void*)0);
+
+  RenderProgram output = {
+    .program = program,
+    .vbo = vbo,
+    .vao = vao,
+    .modelUniform = modelUniform,
+    .zoomScaleUniform = zoomScaleUniform,
+    .defaultScaleUniform = defaultScaleUniform,
+    .cameraPosUniform = cameraPosUniform,
+  };
+  return output;
+}
+
+Renderer makeRenderer() {
+  RenderProgram visibleSectorProgram = makeVisibleSectorProgram();
+  RenderProgram unitsProgram = makeUnitsProgram();
+  Renderer output = {
+    .unitsProgram = unitsProgram,
+    .visibleSectorProgram = visibleSectorProgram,
+    .zoomScale = 1.0f
+  };
+  return output;
+}
+
+static void renderUnitsProgram(Renderer *renderer) {
+  RenderingContext *context = renderer->context;
+  RenderProgram *program = &renderer->unitsProgram;
+  glUseProgram(program->program);
+  glUniform1f(program->zoomScaleUniform, renderer->zoomScale);
+  glUniform1f(program->defaultScaleUniform, 0.025f);
+  glUniform2fv(program->cameraPosUniform, 1, (float *)&(context->currentCameraPos[0]));
   for (size_t i = 0; i < context->units_count; i++) {
-    glUniform2fv(renderer->modelUniform, 1, (float *)&(context->units[i].pos[0]));
-    glUniform1i(renderer->isSelectedUniform, context->units[i].isSelected);
+    glUniform2fv(program->modelUniform, 1, (float *)&(context->units[i].pos[0]));
+    glUniform1i(program->isSelectedUniform, context->units[i].isSelected);
     glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / (sizeof(float) * 2));
   }
-  glfwSwapBuffers(renderer->window);
+}
+
+void render(Renderer *renderer) {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  renderUnitsProgram(renderer);
+  glfwSwapBuffers(window);
   glfwPollEvents();
 }
 
-bool should_close(Renderer *renderer) {
-  return glfwGetKey(renderer->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && 
-    glfwWindowShouldClose(renderer->window) == 0;
+bool should_close() {
+  return glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && 
+    glfwWindowShouldClose(window) == 0;
 }
 
 #endif

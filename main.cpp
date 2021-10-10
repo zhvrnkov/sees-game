@@ -18,14 +18,21 @@ using namespace std;
 
 Unit units[UNITS_COUNT];
 RenderingContext context;
+Renderer unitsRenderer;
 
 bool sees(const Unit *src, const Unit *dest, const float c, const float d) {
   float dott = dot(src->dir, dest->pos - src->pos);
   return dott < d && dott >= c;
 }
 
-void mouse_button_callback(double x, double y) {
-  vec2 click = vec2(x, y) / renderer->zoomScale + context.currentCameraPos;
+void scrollCallback(double xoffset, double yoffset) {
+  unitsRenderer.zoomScale += (float)yoffset/10.0f;
+  if (unitsRenderer.zoomScale < 0.1)
+    unitsRenderer.zoomScale = 0.1;
+}
+
+void mouseButtonCallback(double x, double y) {
+  vec2 click = vec2(x, y) / unitsRenderer.zoomScale + context.currentCameraPos;
   for (int i = 0; i < UNITS_COUNT; i++) {
     units[i].isSelected = length(click - units[i].pos) < 0.025f;
     if (units[i].isSelected) {
@@ -60,20 +67,23 @@ int main() {
   }
   std::cout << counter << endl;
 
-  make_renderer();
-  renderer->mouse_button_callback = mouse_button_callback;
+  setupWindow();
+  unitsRenderer = makeRenderer();
+  unitsRenderer.context = &context;
+  windowPresenter.mouseButtonCallback = mouseButtonCallback;
+  windowPresenter.scrollCallback = scrollCallback;
 
   context.units = units;
   context.units_count = UNITS_COUNT;
   context.currentCameraPos = vec2(0.0);
   context.targetCameraPos = context.currentCameraPos;
 
-  for (size_t i = 0; should_close(renderer); i++) {
+  for (size_t i = 0; should_close(); i++) {
     if (context.currentCameraPos != context.targetCameraPos) {
       vec2 diff = (context.targetCameraPos - context.currentCameraPos) / 10.0f;
       context.currentCameraPos += diff;
     }
-    render(renderer, &context);
+    render(&unitsRenderer);
   }
 
 	glfwTerminate();
