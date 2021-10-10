@@ -24,11 +24,10 @@ int main() {
   }
   auto t2 = high_resolution_clock::now();
   duration<double, std::milli> ms_double = t2 - t1;
+  std::cout << "Total units count: " << UNITS_COUNT << endl;
   std::cout << "Computing unit's sees status took: " <<  ms_double.count() << "ms" << endl;
-  int counter = 0;
-  for (int i = 0; i < UNITS_COUNT; i++) {
-      counter += units[i].seesCount;
-  }
-  std::cout << counter << endl;
+  
+  write_units_description(units, "units.out.csv", UNITS_COUNT);
+
   return 0;
 }

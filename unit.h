@@ -35,19 +35,16 @@ SeesResult sees(const Unit *src, const Unit *dest, const float angleCoef, const 
   vec2 destPosFromSrcPos = dest->pos - src->pos;
   float srcToDestDistance = length(destPosFromSrcPos);
   vec2 normDestPosFromSrcPos = destPosFromSrcPos / srcToDestDistance;
-  float srcDot = dot(src->dir, normDestPosFromSrcPos);
-  float destDot = dot(dest->dir, -normDestPosFromSrcPos);
   return SeesResult {
-    .isSrcSeesDest = srcToDestDistance < distance && srcDot > angleCoef,
-    .isDestSeesSrc = srcToDestDistance < distance && destDot > angleCoef
+    .isSrcSeesDest = srcToDestDistance < distance && dot(src->dir, normDestPosFromSrcPos) > angleCoef,
+    .isDestSeesSrc = srcToDestDistance < distance && dot(dest->dir, -normDestPosFromSrcPos) > angleCoef
   };
 }
 
 bool fastSees(const Unit *src, const Unit *dest, const float angleCoef, const float distance) {
   vec2 destPosFromSrcPos = dest->pos - src->pos;
   float srcToDestDistance = length(destPosFromSrcPos);
-  float srcDot = dot(src->dir, destPosFromSrcPos / srcToDestDistance);
-  return srcToDestDistance < distance && srcDot > angleCoef;
+  return srcToDestDistance < distance && dot(src->dir, destPosFromSrcPos / srcToDestDistance) > angleCoef;
 }
 
 #endif
